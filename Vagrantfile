@@ -1,26 +1,36 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
+require 'securerandom'
 
-Vagrant::Config.run do |config|
-  config.vm.define :controller do |controller_config|
+nodes = {
+    'controller'  => [0, 200],
+}
 
-    # Every Vagrant virtual environment requires 
-    # a box to build off of.
-    controller_config.vm.box = "precise64"
+# This is some magic to help avoid network collisions.
+# If however, it still collides, comment out this line and uncomment the one below it
+third_octet = SecureRandom.random_number(200)
+#third_octet = 172
 
-    controller_config.vm.host_name = "controller"
+Vagrant.configure("2") do |config|
+    config.vm.box = "precise64"
+    config.vm.box_url = "http://files.vagrantup.com/precise64.box"
+    
+    nodes.each do |prefix, (count, ip_start)|
+        count.times do |i|
+            hostname = "%s" % [prefix, (i+1)]
 
-    controller_config.vm.box_url = "http://files.vagrantup.com/precise64.box"
+            config.vm.define "#{hostname}" do |box|
+                box.vm.hostname = "#{hostname}.book"
+                box.vm.network :private_network, ip: "172.16.#{third_octet}.#{ip_start+i}", :netmask => "255.255.0.0"
+                box.vm.network :private_network, ip: "10.10.#{third_octet}.#{ip_start+i}", :netmask => "255.255.0.0"
 
-    controller_config.vm.network :hostonly, "172.16.0.201", :netmask => "255.255.0.0"
-    controller_config.vm.network :hostonly, "10.5.5.201"
+                # Run the installer shell file based on the name
+                box.vm.provision :shell, :path => "#{prefix}.sh"
 
-    # Customise the VM virtual hardware
-    controller_config.vm.customize ["modifyvm", :id, "--memory", 2048]
-    controller_config.vm.customize ["modifyvm", :id, "--cpus", 1]
-    controller_config.vm.customize ["createhd", "--filename", "controller-cinder.vdi", "--size", 20480]
-    controller_config.vm.customize ["storageattach", :id, "--storagectl", "SATA Controller","--port", 1, "--device", 0, "--type", "hdd", "--medium", "controller-cinder.vdi"] 
-  
-  end
-  config.vm.provision :shell, :path => "controller-setup.sh"
+                box.vm.provider :virtualbox do |vbox|
+                    vbox.customize ["modifyvm", :id, "--memory", 1024]
+                end
+            end
+        end
+    end
 end
