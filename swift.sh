@@ -4,5 +4,3 @@ git clone https://github.com/discoposse/MasteringOpenStack.git /home/vagrant/Mas
 source /home/vagrant/MasteringOpenStack/openrc
 echo "source /home/vagrant/MasteringOpenStack/openrc" >> ~/.bashrc
 sudo bash /home/vagrant/MasteringOpenStack/swift-install.sh
-
-
