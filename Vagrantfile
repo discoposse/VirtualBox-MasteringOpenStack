@@ -60,6 +60,9 @@ Vagrant.configure("2") do |config|
 		        vbox.customize ["modifyvm", :id, "--memory", 512]
 		    elsif prefix == "swift"
 		        vbox.customize ["modifyvm", :id, "--memory", 2048]
+			file_to_disk = './new_disk.vdi'
+			vbox.customize ['createhd', '--filename',file_to_disk, '--size', 50*1024]
+			vbox.customize ['storageattach', :id, '--storagectl', 'SATA Controller', '--port', 1, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]
 		    end
                 end
             end
