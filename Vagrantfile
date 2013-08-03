@@ -54,6 +54,9 @@ Vagrant.configure("2") do |config|
                         vbox.customize ["modifyvm", :id, "--cpus", 2]
 		    elsif prefix == "controller"
 		        vbox.customize ["modifyvm", :id, "--memory", 2048]
+			file_to_disk = './cinder.vdi'
+			vbox.customize ['createhd', '--filename',file_to_disk, '--size', 50*1024]
+			vbox.customize ['storageattach', :id, '--storagectl', 'SATA Controller', '--port', 1, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]
 		    elsif prefix == "network"
 		        vbox.customize ["modifyvm", :id, "--memory", 1024]
 		    elsif prefix == "proxy"

@@ -5,3 +5,4 @@ source /home/vagrant/MasteringOpenStack/openrc
 echo "source /home/vagrant/MasteringOpenStack/openrc" >> ~/.bashrc
 sudo bash /home/vagrant/MasteringOpenStack/keystone-install.sh
 sudo bash /home/vagrant/MasteringOpenStack/glance-install.sh
+sudo bash /home/vagrant/MasteringOpenStack/cinder-install.sh
