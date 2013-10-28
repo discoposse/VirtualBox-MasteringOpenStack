@@ -4,6 +4,7 @@
 
 # Virtual Box disks
 *.vdi
+*.box
 
 #################
 ## Eclipse

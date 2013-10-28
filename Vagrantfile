@@ -2,12 +2,12 @@
 # vi: set ft=ruby :
 
 nodes = {
-    'proxy'	=> [1, 110],
+    # 'proxy'	=> [1, 110],
     'controller'  => [1, 200],
-    'compute'  => [1, 201],
-    'network'  => [1, 202],
-    'swift'   => [1, 210],
-    'iscsi'   => [1, 211],
+    # 'compute'  => [1, 201],
+    # 'network'  => [1, 202],
+    # 'swift'   => [1, 210],
+    # 'iscsi'   => [1, 211],
 }
 
 Vagrant.configure("2") do |config|
