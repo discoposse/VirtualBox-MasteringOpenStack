@@ -17,6 +17,11 @@ sudo echo "deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-updates/
 sudo apt-get install python-software-properties -y
 sudo apt-get update && apt-get upgrade -y
 
+sudo sed -i "s/^127.0.1.1.*/172.16.0.10 controller/g" /etc/hosts
+echo "
+172.16.0.11 compute
+" >> /etc/hosts
+
 # Install NTP while we are here
 echo "ntpdate controller
 hwclock -w" | sudo tee /etc/cron.daily/ntpdate
@@ -276,6 +281,31 @@ service nova-novncproxy restart
 #################### Swift (proxy) Install ####################
 
 #################### Horizon Install ####################
+
+apt-get install -y memcached libapache2-mod-wsgi openstack-dashboard
+apt-get remove -y --purge openstack-dashboard-ubuntu-theme
+
+sudo sed -i "s/^\-l 127.0.0.1.*/-l 172.21.0.10/g" /etc/memcached.conf
+sudo sed -i "s/^OPENSTACK_HOST.*/OPENSTACK_HOST = \"controller\"/g" /etc/openstack-dashboard/local_settings.py
+
+mysql -h localhost -uroot -p$MYSQL_ROOT_PASS -e "CREATE DATABASE dash;"
+mysql -h localhost -uroot -p$MYSQL_ROOT_PASS -e "GRANT ALL ON dash.* TO 'dash'@'localhost' IDENTIFIED BY '$MYSQL_PASS';"
+mysql -h localhost -uroot -p$MYSQL_ROOT_PASS -e "GRANT ALL ON dash.* TO 'dash'@'%' IDENTIFIED BY '$MYSQL_PASS';"
+
+echo "
+SESSION_ENGINE = 'django.core.cache.backends.db.DatabaseCache'
+DATABASE = {
+	'default': { 
+	# Database configuration here
+	'ENGINE': 'django.db.backends.mysql',
+	'NAME': 'dash',
+	'USER': 'dash',
+	'PASSWORD': 'openstack',
+	'HOST': 'localhost',
+	'default-character-set': 'utf8'
+	}
+}
+" >> /etc/openstack-dashboard/local_settings.py
 
 #################### Heat Install ####################
 
