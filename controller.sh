@@ -278,38 +278,46 @@ service nova-novncproxy restart
 
 #################### Cinder Install ####################
 
+
 #################### Swift (proxy) Install ####################
+
 
 #################### Horizon Install ####################
 
 apt-get install -y memcached libapache2-mod-wsgi openstack-dashboard
 apt-get remove -y --purge openstack-dashboard-ubuntu-theme
 
-sudo sed -i "s/^\-l 127.0.0.1.*/-l 172.21.0.10/g" /etc/memcached.conf
+sudo sed -i "s/^\-l 127.0.0.1.*/-l 172.16.0.10/g" /etc/memcached.conf
 sudo sed -i "s/^OPENSTACK_HOST.*/OPENSTACK_HOST = \"controller\"/g" /etc/openstack-dashboard/local_settings.py
+sudo sed -i "s/127.0.0.1/172.16.0.10/g" /etc/openstack-dashboard/local_settings.py
 
 mysql -h localhost -uroot -p$MYSQL_ROOT_PASS -e "CREATE DATABASE dash;"
 mysql -h localhost -uroot -p$MYSQL_ROOT_PASS -e "GRANT ALL ON dash.* TO 'dash'@'localhost' IDENTIFIED BY '$MYSQL_PASS';"
 mysql -h localhost -uroot -p$MYSQL_ROOT_PASS -e "GRANT ALL ON dash.* TO 'dash'@'%' IDENTIFIED BY '$MYSQL_PASS';"
 
-echo "
-SESSION_ENGINE = 'django.core.cache.backends.db.DatabaseCache'
-DATABASE = {
-	'default': { 
-	# Database configuration here
-	'ENGINE': 'django.db.backends.mysql',
-	'NAME': 'dash',
-	'USER': 'dash',
-	'PASSWORD': 'openstack',
-	'HOST': 'localhost',
-	'default-character-set': 'utf8'
-	}
-}
-" >> /etc/openstack-dashboard/local_settings.py
+# echo "
+# SESSION_ENGINE = 'django.core.cache.backends.db.DatabaseCache'
+# DATABASE = {
+# 	'default': { 
+#	# Database configuration here
+#	'ENGINE': 'django.db.backends.mysql',
+#	'NAME': 'dash',
+#	'USER': 'dash',
+#	'PASSWORD': 'openstack',
+#	'HOST': 'localhost',
+#	'default-character-set': 'utf8'
+#	}
+# }
+# " >> /etc/openstack-dashboard/local_settings.py
+
+. /etc/init.d/apache2 reload
 
 #################### Heat Install ####################
 
+
 #################### Telemetry Install ####################
+
+
 
 
 
