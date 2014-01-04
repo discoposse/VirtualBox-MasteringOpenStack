@@ -3,7 +3,7 @@
 
 nodes = {
     'controller'  => [1, 10],
-    'compute'  => [1, 11],
+    'compute1'  => [1, 11],
     'network'  => [1, 12],
 }
 

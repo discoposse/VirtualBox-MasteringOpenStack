@@ -17,10 +17,13 @@ sudo echo "deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-updates/
 sudo apt-get install python-software-properties -y
 sudo apt-get update && apt-get upgrade -y
 
-sudo sed -i "s/^127.0.1.1.*/172.16.0.10 controller/g" /etc/hosts
-echo "
-172.16.0.11 compute
-" >> /etc/hosts
+rm /etc/hosts
+# sudo sed -i "s/^127.0.1.1.*/172.16.0.10 controller/g" /etc/hosts
+
+echo "127.0.0.1 localhost
+172.16.0.10 controller.local controller
+172.16.0.11 compute1.local compute1
+" > /etc/hosts
 
 # Install NTP while we are here
 echo "ntpdate controller
@@ -226,18 +229,39 @@ echo "source /home/vagrant/.openrc" >> ~/.bashrc
 sudo apt-get install -y glance glance-api glance-registry python-glanceclient glance-common
 
 mysql -h localhost -uroot -p$MYSQL_ROOT_PASS -e "CREATE DATABASE glance;"
-mysql -h localhost -uroot -p$MYSQL_ROOT_PASS -e "GRANT ALL ON nova.* TO 'glance'@'localhost' IDENTIFIED BY '$MYSQL_PASS';"
-mysql -h localhost -uroot -p$MYSQL_ROOT_PASS -e "GRANT ALL ON nova.* TO 'glance'@'%' IDENTIFIED BY '$MYSQL_PASS';"
+mysql -h localhost -uroot -p$MYSQL_ROOT_PASS -e "GRANT ALL ON glance.* TO 'glance'@'localhost' IDENTIFIED BY '$MYSQL_PASS';"
+mysql -h localhost -uroot -p$MYSQL_ROOT_PASS -e "GRANT ALL ON glance.* TO 'glance'@'%' IDENTIFIED BY '$MYSQL_PASS';"
 
-sudo sed -i 's#^connection.*connection = mysql://glance:openstack@127.0.0.1/glance#' /etc/glance/glance-registry.conf
+sudo sed -i 's#^sql_connection.*#sql_connection = mysql://glance:openstack@127.0.0.1/glance#' /etc/glance/glance-registry.conf
+sudo sed -i 's#^auth_host.*#auth_host = controller#' /etc/glance/glance-registry.conf
 sudo sed -i 's#^admin_tenant_name.*#admin_tenant_name = service#' /etc/glance/glance-registry.conf
 sudo sed -i 's#^admin_user.*#admin_user = glance#' /etc/glance/glance-registry.conf
 sudo sed -i 's#^admin_password.*#admin_password = glance#' /etc/glance/glance-registry.conf
 
-sudo sed -i 's#^connection.*connection = mysql://glance:openstack@127.0.0.1/glance#' /etc/glance/glance-api.conf
+sudo sed -i 's#^sql_connection.*#sql_connection = mysql://glance:openstack@127.0.0.1/glance#' /etc/glance/glance-api.conf
+sudo sed -i 's#^auth_host.*#auth_host = controller#' /etc/glance/glance-api.conf
 sudo sed -i 's#^admin_tenant_name.*#admin_tenant_name = service#' /etc/glance/glance-api.conf
 sudo sed -i 's#^admin_user.*#admin_user = glance#' /etc/glance/glance-api.conf
 sudo sed -i 's#^admin_password.*#admin_password = glance#' /etc/glance/glance-api.conf
+
+sudo sed -i '/^\[filter:authtoken\]/d' /etc/glance/glance-api-paste.ini
+sudo sed -i '/^delay_auth_decision.*/d' /etc/glance/glance-api-paste.ini
+sudo sed -i '/^paste.filter_factory = keystoneclient.middleware.auth_token.*/d' /etc/glance/glance-api-paste.ini
+
+echo "auth_host = controller
+admin_user = glance
+admin_tenant_name = service
+admin_password = glance
+" | sudo tee -a /etc/glance/glance-registry-paste.ini
+
+echo "
+[filter:authtoken]
+paste.filter_factory = keystoneclient.middleware.auth_token:filter_factory
+auth_host = controller
+admin_user = glance
+admin_tenant_name = service
+admin_password = glance
+" | sudo tee -a /etc/glance/glance-api-paste.ini
 
 service glance-api restart && service glance-registry restart
 
@@ -254,7 +278,8 @@ mysql -h localhost -uroot -p$MYSQL_ROOT_PASS -e "CREATE DATABASE nova;"
 mysql -h localhost -uroot -p$MYSQL_ROOT_PASS -e "GRANT ALL ON nova.* TO 'nova'@'localhost' IDENTIFIED BY '$MYSQL_PASS';"
 mysql -h localhost -uroot -p$MYSQL_ROOT_PASS -e "GRANT ALL ON nova.* TO 'nova'@'%' IDENTIFIED BY '$MYSQL_PASS';"
 
-sudo sed -i 's#^connection.*connection = mysql://nova:openstack@127.0.0.1/nova#' /etc/nova/nova.conf
+sudo sed -i 's#^connection.*#connection = mysql://nova:openstack@127.0.0.1/nova#' /etc/nova/nova.conf
+sudo sed -i 's#^auth_host.*#auth_host = controller#' /etc/nova/api-paste.ini
 sudo sed -i 's#^admin_tenant_name.*#admin_tenant_name = service#' /etc/nova/api-paste.ini
 sudo sed -i 's#^admin_user.*#admin_user = nova#' /etc/nova/api-paste.ini
 sudo sed -i 's#^admin_password.*#admin_password = nova#' /etc/nova/api-paste.ini
