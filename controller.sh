@@ -33,6 +33,11 @@ chmod a+x /etc/cron.daily/ntpdate
 sudo apt-get -y install mysql-server python-mysqldb rabbitmq-server
 
 sudo sed -i "s/^bind\-address.*/bind-address = ${MYSQL_HOST}/g" /etc/mysql/my.cnf
+
+# Skip Name Resolve
+echo "[mysqld]
+skip-name-resolve" > /etc/mysql/conf.d/skip-name-resolve.cnf
+
 sudo restart mysql
 
 #################### Keystone Install ####################

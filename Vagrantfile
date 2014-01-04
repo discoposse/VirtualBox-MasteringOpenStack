@@ -4,7 +4,7 @@
 nodes = {
     'controller'  => [1, 10],
     'compute1'  => [1, 11],
-    'network'  => [1, 12],
+    # 'network'  => [1, 12],
 }
 
 Vagrant.configure("2") do |config|
